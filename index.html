@@ -10,15 +10,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     
     <style>
-        body {
-            background: linear-gradient(135deg, #e0f2fe 0%, #e0e7ff 50%, #f0fdf4 100%);
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        body { background: linear-gradient(135deg, #e0f2fe 0%, #e0e7ff 50%, #f0fdf4 100%); }
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.6); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .active-white { border-color: #fbbf24; box-shadow: 0 15px 30px rgba(251, 191, 36, 0.25); transform: translateY(-4px); }
         .active-green { border-color: #22c55e; box-shadow: 0 15px 30px rgba(34, 197, 94, 0.25); transform: translateY(-4px); }
         .active-blue { border-color: #3b82f6; box-shadow: 0 15px 30px rgba(59, 130, 246, 0.25); transform: translateY(-4px); }
@@ -55,7 +48,7 @@
             <button id="voice-btn" onclick="toggleVoiceRecognition()" class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl shadow-lg transition-all duration-300 hover:scale-105">
                 <i id="mic-icon" class="fa-solid fa-microphone"></i>
             </button>
-            <p id="voice-status" class="text-sm font-semibold text-slate-500">Click to Start Luxury Voice Interaction</p>
+            <p id="voice-status" class="text-sm font-semibold text-slate-500">Tap to Start (Works on All Phones)</p>
             <p id="voice-result" class="text-xs italic text-indigo-600 font-medium bg-indigo-50 px-3 py-1 rounded-full hidden"></p>
         </div>
     </div>
@@ -68,10 +61,7 @@
                 <h2 class="text-xl font-bold text-slate-700">White Lamp</h2>
                 <p class="text-xs text-slate-400 mt-1">Control Pin: D4 (L1)</p>
             </div>
-            <label class="switch">
-                <input type="checkbox" id="switch-L1" onchange="toggleDevice('L1', this)">
-                <span class="slider"></span>
-            </label>
+            <label class="switch"><input type="checkbox" id="switch-L1" onchange="toggleDevice('L1', this)"><span class="slider"></span></label>
         </div>
 
         <div id="card-L2" class="glass-card rounded-3xl p-6 flex flex-col items-center justify-between h-64 shadow-lg">
@@ -80,10 +70,7 @@
                 <h2 class="text-xl font-bold text-slate-700">Green Lamp</h2>
                 <p class="text-xs text-slate-400 mt-1">Control Pin: D7 (L2)</p>
             </div>
-            <label class="switch">
-                <input type="checkbox" id="switch-L2" onchange="toggleDevice('L2', this)">
-                <span class="slider"></span>
-            </label>
+            <label class="switch"><input type="checkbox" id="switch-L2" onchange="toggleDevice('L2', this)"><span class="slider"></span></label>
         </div>
 
         <div id="card-L3" class="glass-card rounded-3xl p-6 flex flex-col items-center justify-between h-64 shadow-lg">
@@ -92,10 +79,7 @@
                 <h2 class="text-xl font-bold text-slate-700">LED Strip</h2>
                 <p class="text-xs text-slate-400 mt-1">Control Pin: D6 (L3)</p>
             </div>
-            <label class="switch">
-                <input type="checkbox" id="switch-L3" onchange="toggleDevice('L3', this)">
-                <span class="slider"></span>
-            </label>
+            <label class="switch"><input type="checkbox" id="switch-L3" onchange="toggleDevice('L3', this)"><span class="slider"></span></label>
         </div>
 
         <div id="card-L4" class="glass-card rounded-3xl p-6 flex flex-col items-center justify-between h-64 shadow-lg">
@@ -104,10 +88,7 @@
                 <h2 class="text-xl font-bold text-slate-700">Electric Fan</h2>
                 <p class="text-xs text-slate-400 mt-1">Control Pin: D5 (L4)</p>
             </div>
-            <label class="switch">
-                <input type="checkbox" id="switch-L4" onchange="toggleDevice('L4', this)">
-                <span class="slider"></span>
-            </label>
+            <label class="switch"><input type="checkbox" id="switch-L4" onchange="toggleDevice('L4', this)"><span class="slider"></span></label>
         </div>
 
     </main>
@@ -130,10 +111,8 @@
         const firebaseConfig = {
             databaseURL: "https://omarsmarthome-default-rtdb.europe-west1.firebasedatabase.app"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-
         const devices = ['L1', 'L2', 'L3', 'L4'];
         
         devices.forEach(dev => {
@@ -173,10 +152,12 @@
             }
         }
 
-        // --- 🤖 Text-to-Speech (AI Luxury Voice Engine) ---
+        // --- 🤖 Text-to-Speech (Universal: iOS + Android) ---
         function generateVoiceFeedback(textToSpeak) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                }
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
                 utterance.lang = 'en-US';
                 utterance.rate = 1.05; 
@@ -185,15 +166,24 @@
             }
         }
 
-        // --- 🎙️ Continuous English Voice Recognition Engine ---
+        // --- 🎙️ Universal Voice Recognition Engine ---
         let recognition;
         let isListening = false; 
 
         function toggleVoiceRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            // Fallback if browser doesn't support it at all (Older phones)
             if (!SpeechRecognition) {
-                alert("Your browser does not support Web Speech API. Please use Google Chrome.");
+                alert("Your browser does not support Voice Control. Please open this link in Google Chrome or Safari.");
                 return;
+            }
+
+            // Universal Audio Unlock Hack (Fixes iOS, Safe for Android)
+            if ('speechSynthesis' in window && !isListening) {
+                let silentUtterance = new SpeechSynthesisUtterance('');
+                silentUtterance.volume = 0; 
+                window.speechSynthesis.speak(silentUtterance);
             }
 
             const btn = document.getElementById('voice-btn');
@@ -211,19 +201,38 @@
                     isListening = true;
                     btn.classList.add('listening');
                     icon.className = "fa-solid fa-microphone-lines animate-pulse";
-                    status.innerText = "Luxury Voice Streaming Active...";
+                    status.innerText = "Listening... (Works on All Devices)";
+                    status.classList.remove("text-red-500");
                     resultBox.classList.add('hidden');
-                    generateVoiceFeedback("Voice assistant online. Ready for your commands, Omar.");
+                    
+                    setTimeout(() => {
+                        generateVoiceFeedback("Voice assistant online.");
+                    }, 100);
                 };
 
                 recognition.onend = function() {
                     if (isListening) {
-                        recognition.start(); 
+                        recognition.start(); // Auto-restart for Android sleep policies
                     } else {
                         btn.classList.remove('listening');
                         icon.className = "fa-solid fa-microphone";
-                        status.innerText = "Click to Start Luxury Voice Interaction";
+                        status.innerText = "Tap to Start (Works on All Phones)";
                         generateVoiceFeedback("Voice assistant offline.");
+                    }
+                };
+
+                // CRITICAL: Error handling if Teacher's phone blocks the microphone!
+                recognition.onerror = function(event) {
+                    if (event.error === 'not-allowed') {
+                        status.innerText = "⚠️ Microphone access denied! Please allow permissions in browser settings.";
+                        status.classList.add("text-red-500");
+                        isListening = false;
+                        btn.classList.remove('listening');
+                        icon.className = "fa-solid fa-microphone-slash";
+                    } else if (event.error === 'no-speech') {
+                        // Ignore, just keep listening
+                    } else {
+                        status.innerText = "Error: " + event.error + ". Please refresh the page.";
                     }
                 };
 
@@ -233,7 +242,6 @@
                         resultBox.innerText = `Heard: "${command}"`;
                         resultBox.classList.remove('hidden');
 
-                        // 1. Electric Fan Orders (L4)
                         if (command.includes('open the fan') || command.includes('open fan') || command.includes('turn on fan')) {
                             database.ref('/P1').set("0");
                             database.ref('/L4').set("1");
@@ -242,8 +250,6 @@
                             database.ref('/L4').set("0");
                             generateVoiceFeedback("The fan is closed");
                         }
-                        
-                        // 2. White Lamp Orders (L1)
                         else if (command.includes('open white') || command.includes('open the white') || command.includes('turn on white')) {
                             database.ref('/P1').set("0");
                             database.ref('/L1').set("1");
@@ -252,8 +258,6 @@
                             database.ref('/L1').set("0");
                             generateVoiceFeedback("The white lamp is closed");
                         }
-
-                        // 3. Green Lamp Orders (L2)
                         else if (command.includes('open green') || command.includes('open the green') || command.includes('turn on green')) {
                             database.ref('/P1').set("0");
                             database.ref('/L2').set("1");
@@ -262,8 +266,6 @@
                             database.ref('/L2').set("0");
                             generateVoiceFeedback("The green lamp is closed");
                         }
-
-                        // 4. LED Strip Orders (L3)
                         else if (command.includes('open led') || command.includes('open the led') || command.includes('turn on led')) {
                             database.ref('/P1').set("0");
                             database.ref('/L3').set("1");
@@ -272,8 +274,6 @@
                             database.ref('/L3').set("0");
                             generateVoiceFeedback("The L E D strip is closed");
                         }
-                        
-                        // 5. Emergency Full House Shutdown Order
                         else if (command.includes('close all') || command.includes('turn off everything') || command.includes('turn off all')) {
                             database.ref('/P1').set("1"); 
                             database.ref('/L1').set("0"); 
@@ -282,8 +282,6 @@
                             database.ref('/L4').set("0"); 
                             generateVoiceFeedback("All devices are closed");
                         }
-
-                        // 6. Master Open Everything Order
                         else if (command.includes('open all') || command.includes('turn on everything') || command.includes('open everything') || command.includes('turn on all')) {
                             database.ref('/P1').set("0"); 
                             database.ref('/L1').set("1");
