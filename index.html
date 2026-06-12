@@ -12,24 +12,20 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     
     <style>
-        /* Colorful and bright background gradient */
         body {
             background: linear-gradient(135deg, #e0f2fe 0%, #e0e7ff 50%, #f0fdf4 100%);
         }
-        /* Glassmorphism card effects */
         .glass-card {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.6);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        /* Active glow states for device triggering */
         .active-white { border-color: #fbbf24; box-shadow: 0 15px 30px rgba(251, 191, 36, 0.25); transform: translateY(-4px); }
         .active-green { border-color: #22c55e; box-shadow: 0 15px 30px rgba(34, 197, 94, 0.25); transform: translateY(-4px); }
         .active-blue { border-color: #3b82f6; box-shadow: 0 15px 30px rgba(59, 130, 246, 0.25); transform: translateY(-4px); }
         .active-cyan { border-color: #06b6d4; box-shadow: 0 15px 30px rgba(6, 182, 212, 0.25); transform: translateY(-4px); }
         
-        /* Modern UI Toggle Switches */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
@@ -37,7 +33,6 @@
         input:checked + .slider { background-color: #22c55e; }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Microphone listening pulse animation */
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
@@ -58,7 +53,7 @@
         </p>
     </header>
 
-    <!-- 🎙️ Continuous Voice Assistant UI -->
+    <!-- 🎙️ Voice Assistant UI -->
     <div class="max-w-md w-full mx-auto mt-6 px-6 text-center">
         <div class="glass-card rounded-2xl p-4 shadow-md flex flex-col items-center justify-center gap-3">
             <button id="voice-btn" onclick="toggleVoiceRecognition()" class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl shadow-lg transition-all duration-300 hover:scale-105">
@@ -142,7 +137,6 @@
     </footer>
 
     <script>
-        // --- Firebase Realtime Database Configuration ---
         const firebaseConfig = {
             databaseURL: "https://omarsmarthome-default-rtdb.europe-west1.firebasedatabase.app"
         };
@@ -152,7 +146,6 @@
 
         const devices = ['L1', 'L2', 'L3', 'L4'];
         
-        // Listen to active states from Firebase and update the UI fluidly
         devices.forEach(dev => {
             database.ref('/' + dev).on('value', (snapshot) => {
                 const val = snapshot.val();
@@ -172,7 +165,7 @@
 
         function toggleDevice(device, element) {
             const valueToSend = element.checked ? "1" : "0";
-            database.ref('/P1').set("0"); // Auto disable master shutdown when a single switch is flipped
+            database.ref('/P1').set("0"); 
             database.ref('/' + device).set(valueToSend);
         }
 
@@ -209,7 +202,7 @@
             if (!recognition) {
                 recognition = new SpeechRecognition();
                 recognition.lang = 'en-US';        
-                recognition.continuous = true;     // Continuous mode active
+                recognition.continuous = true;     
                 recognition.interimResults = false; 
 
                 recognition.onstart = function() {
@@ -222,7 +215,7 @@
 
                 recognition.onend = function() {
                     if (isListening) {
-                        recognition.start(); // Auto-restart block
+                        recognition.start(); 
                     } else {
                         btn.classList.remove('listening');
                         icon.className = "fa-solid fa-microphone";
@@ -268,14 +261,18 @@
                             database.ref('/L3').set("0");
                         }
                         
-                        // 5. Emergency Full House Shutdown Order
+                        // 🚀 5. FIXED: Emergency Full House Shutdown Order (Clears Web UI States Automatically)
                         else if (command.includes('close all') || command.includes('turn off everything') || command.includes('turn off all')) {
-                            database.ref('/P1').set("1");
+                            database.ref('/P1').set("1"); // Master hardware switch
+                            database.ref('/L1').set("0"); // Turn off White Lamp UI
+                            database.ref('/L2').set("0"); // Turn off Green Lamp UI
+                            database.ref('/L3').set("0"); // Turn off LED UI
+                            database.ref('/L4').set("0"); // Turn off Fan UI
                         }
 
-                        // 🚀 6. NEW FEATURE: Master Open Everything Order
+                        // 6. Master Open Everything Order
                         else if (command.includes('open all') || command.includes('turn on everything') || command.includes('open everything') || command.includes('turn on all')) {
-                            database.ref('/P1').set("0"); // Disable master cutoff
+                            database.ref('/P1').set("0"); 
                             database.ref('/L1').set("1");
                             database.ref('/L2').set("1");
                             database.ref('/L3').set("1");
